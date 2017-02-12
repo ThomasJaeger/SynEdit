@@ -28,7 +28,7 @@ replace them with the notice and other provisions required by the GPL.
 If you do not delete the provisions above, a recipient may use your version
 of this file under either the MPL or the GPL.
 
-$Id: SynHighlighterAsm.pas,v 1.14.2.6 2008/09/14 16:24:59 maelh Exp $
+$Id: SynHighlighterAsmMASM.pas,v 1.0 2017/02/12 tjaeger Exp $
 
 You may retrieve the latest version of this file at the SynEdit home page,
 located at http://SynEdit.SourceForge.net
@@ -42,6 +42,9 @@ Known Issues:
 @lastmod(February 12th, 2017)
 The SynHighlighterASM unit provides SynEdit with a Microsoft Macro Assembler (MASM) highlighter.
 The highlighter supports all MASM features including directives and macros.
+
+May experience out of memory when compiling package. Folow instructions to
+compile externally until I move the API functions externally into JSON file.
 }
 
 {$IFNDEF QSYNHIGHLIGHTERASM}
