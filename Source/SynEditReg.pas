@@ -276,6 +276,7 @@ begin
     TSynCACSyn, TSynCacheSyn, TSynFoxproSyn, TSynSQLSyn, TSynSDDSyn,
     //assembler
     TSynADSP21xxSyn, TSynAsmSyn, TSynHC11Syn, TSynHP48Syn, TSynSTSyn,
+    TSynAsmMASMSyn,
     //data modeling
     TSynDmlSyn, TSynModelicaSyn, TSynSMLSyn,
     //data
