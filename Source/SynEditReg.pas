@@ -154,6 +154,7 @@ uses
   SynEditOptionsDialog,
   SynHighlighterADSP21xx,
   SynHighlighterAsm,
+  SynHighlighterAsmMASM,
   SynHighlighterAWK,
   SynHighlighterBaan, 
   SynHighlighterBat,
