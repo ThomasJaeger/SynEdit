@@ -1131,18 +1131,11 @@ end;
 function TSynCustomHighlighter.IsIdentChar(AChar: WideChar): Boolean;
 begin
   case AChar of
-    //'_', '0'..'9', 'A'..'Z', 'a'..'z':
-    '[', ']', '?', '.', '_', '0'..'9', 'A'..'Z', 'a'..'z':    // THJ
+    '[', ']', '?', '.', '_', '0'..'9', 'A'..'Z', 'a'..'z':
       Result := True;
     else
       Result := False;
   end;
-
-
-//  if IsWordBreakChar(Achar) then
-//      Result := False
-//    else
-//      Result := True;
 end;
 
 function TSynCustomHighlighter.IsKeyword(const AKeyword: UnicodeString): Boolean;
@@ -1168,25 +1161,13 @@ end;
 function TSynCustomHighlighter.IsWordBreakChar(AChar: WideChar): Boolean;
 begin
   case AChar of
-//    #0..#32, '.', ',', ';', ':', '"', '''', '´', '`', '°', '^', '!', '?', '&',
-//    '$', '@', '§', '%', '#', '~', '[', ']', '(', ')', '{', '}', '<', '>',
-//    '-', '=', '+', '*', '/', '\', '|':
-    #0..#32, ',', ';', ':', '"', '''', '´', '`', '°', '^', '!', '&',
+    #0..#32, ',', ';', ':', '"', '''', #$B4, #$60, '°', '^', '!', '&',
     '$', '@', '§', '%', '#', '~', '(', ')', '{', '}', '<', '>',
     '-', '=', '+', '*', '/', '\', '|':
       Result := True;
     else
       Result := False;
   end;
-
-//  case AChar of
-//    #0..#32, '.', ',', ';', ':', '"', '''', #$B4, #$60, '°', '^', '!', '?', '&',
-//    '$', '@', '§', '%', '#', '~', '[', ']', '(', ')', '{', '}', '<', '>',
-//    '-', '=', '+', '*', '/', '\', '|':
-//      Result := True;
-//    else
-//      Result := False;
-//  end;
 end;
 
 procedure TSynCustomHighlighter.Next;
