@@ -78,6 +78,7 @@
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <DCC_Define>USE_ALPHASKINS;$(DCC_Define)</DCC_Define>
         <DllSuffix>XE4</DllSuffix>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
@@ -90,6 +91,8 @@
         <DCCReference Include="vcldb.dcp"/>
         <DCCReference Include="vclx.dcp"/>
         <DCCReference Include="rtl.dcp"/>
+        <DCCReference Include="vclimg.dcp"/>
+        <DCCReference Include="acntDelphiXE4_R.dcp"/>
         <DCCReference Include="..\..\Source\SynTextDrawer.pas"/>
         <DCCReference Include="..\..\Source\SynAutoCorrect.pas"/>
         <DCCReference Include="..\..\Source\SynAutoCorrectEditor.pas">
@@ -207,6 +210,8 @@
         </DCCReference>
         <DCCReference Include="..\..\Source\SynEditHighlighterOptions.pas"/>
         <DCCReference Include="..\..\Source\SynHighlighterAsmMASM.pas"/>
+        <DCCReference Include="..\..\Source\JsonDataObjects.pas"/>
+        <DCCReference Include="..\..\Source\SynColors.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -254,10 +259,12 @@
                     <VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
                     <VersionInfoKeys Name="Comments"/>
                 </VersionInfoKeys>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k180.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp180.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>
-                <Platform value="iOSDevice">False</Platform>
-                <Platform value="iOSSimulator">False</Platform>
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">True</Platform>
             </Platforms>

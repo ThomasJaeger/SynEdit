@@ -71,11 +71,14 @@ uses
 {$ENDIF}
   SysUtils,
   System.IOUtils,
+  SynColors,
+  SynMemo,
   Classes;
 
 type
   TtkTokenKind = (tkComment, tkIdentifier, tkKey, tkNull, tkNumber, tkSpace,
-    tkString, tkSymbol, tkUnknown, tkDirectives, tkRegister, tkApi, tkInclude);
+    tkString, tkSymbol, tkUnknown, tkDirectives, tkRegister, tkApi, tkInclude,
+    tkOperator);
 
 type
   TSynAsmMASMSyn = class(TSynCustomHighlighter)
@@ -96,6 +99,10 @@ type
     fRegisterAttri: TSynHighlighterAttributes;
     fApiKeywords: TSynHashEntryList;
     fApiAttri: TSynHighlighterAttributes;
+    fOperatorKeywords: TSynHashEntryList;
+    fOperatorAttri: TSynHighlighterAttributes;
+    FSynColors: TSynColors;
+    FApis: UnicodeString;
     function HashKey(Str: PWideChar): Cardinal;
     procedure CommentProc;
     procedure CRProc;
@@ -116,7 +123,9 @@ type
     procedure DoAddDirectivesKeyword(AKeyword: UnicodeString; AKind: integer);
     procedure DoAddRegisterKeyword(AKeyword: UnicodeString; AKind: integer);
     procedure DoAddApiKeyword(AKeyword: UnicodeString; AKind: integer);
+    procedure DoAddOperatorKeyword(AKeyword: UnicodeString; AKind: integer);
     function IdentKind(MayBe: PWideChar): TtkTokenKind;
+    function GetElement(find: string): TSynColorsElement;
   protected
     function GetSampleSource: UnicodeString; override;
     function IsFilterStored: Boolean; override;
@@ -133,6 +142,9 @@ type
     function GetTokenAttribute: TSynHighlighterAttributes; override;
     function GetTokenKind: integer; override;
     procedure Next; override;
+    procedure SaveFile(fName: string);
+    procedure LoadFile(fName: string);
+    procedure AssignColors(memo: TSynMemo);
   published
     property CommentAttri: TSynHighlighterAttributes read fCommentAttri write fCommentAttri;
     property IdentifierAttri: TSynHighlighterAttributes read fIdentifierAttri write fIdentifierAttri;
@@ -145,6 +157,8 @@ type
     property RegisterAttri: TSynHighlighterAttributes read fRegisterAttri write fRegisterAttri;
     property ApiAttri: TSynHighlighterAttributes read fApiAttri write fApiAttri;
     property IncludeAttri: TSynHighlighterAttributes read fIncludeAttri write fIncludeAttri;
+    property SynColors: TSynColors read FSynColors write FSynColors;
+    property OperatorAttri: TSynHighlighterAttributes read fOperatorAttri write fOperatorAttri;
   end;
 
 implementation
@@ -199,7 +213,17 @@ const
     'r0W,r1W,r2W,r3W,r4W,r5W,r6W,r7W,r8W,r9W,r10W,r11W,r12W,r13W,r14W,r15W,'+
     'r0L,r1L,r2L,r3L,r4L,r5L,r6L,r7L,r8L,r9L,r10L,r11L,r12L,r13L,r14L,r15L';
 
-  Apis: UnicodeString = '';
+  Operators: UnicodeString = '+,-,*,/,==,!=,>,>=,<,<=,||,&&,&,!,carry?,overflow?,'+
+                              'parity?,sign?,zero?,%,&&,abs,addr,and,dup,eq,ge,'+
+                              'gt,high,high32,highword,imagerel,le,length,lengthof,' +
+                              'low,low32,lowword,lroffset,lt,mask,mod,ne,not,offset,' +
+                              'opattr,or,ptr,seg,shl,.type,sectionrel,short,shr,' +
+                              'size,sizeof,this,type,width,xor';
+//  Operators: UnicodeString = 'abs,addr,and,dup,eq,ge,'+
+//                              'gt,high,high32,highword,imagerel,le,length,lengthof,' +
+//                              'low,low32,lowword,lroffset,lt,mask,mod,ne,not,offset,' +
+//                              'opattr,or,ptr,seg,shl,.type,sectionrel,short,shr,' +
+//                              'size,sizeof,this,type,width,xor';
 
   Directives: UnicodeString =
     '=,.386,.386p,.387,.486,.486p,.586,.586p,.686,.686p,alias,align,.allocstack,'+
@@ -306,6 +330,14 @@ begin
   fApiKeywords[HashValue] := TSynHashEntry.Create(AKeyword, AKind);
 end;
 
+procedure TSynAsmMASMSyn.DoAddOperatorKeyword(AKeyword: UnicodeString; AKind: integer);
+var
+  HashValue: Cardinal;
+begin
+  HashValue := HashKey(PWideChar(AKeyword));
+  fOperatorKeywords[HashValue] := TSynHashEntry.Create(AKeyword, AKind);
+end;
+
 //{$Q-}
 function TSynAsmMASMSyn.HashKey(Str: PWideChar): Cardinal;
 begin
@@ -319,90 +351,6 @@ begin
   fStringLen := Str - fToIdent;
 end;
 //{$Q+}
-
-//function SuperFastHash(AData:pointer; ADataLength: integer):longword;
-//// Pascal translation of the SuperFastHash function by Paul Hsieh
-//// more info: http://www.azillionmonkeys.com/qed/hash.html
-//// Translation by: Davy Landman
-//// No warranties, but have fun :)
-//var
-//  TempPart: longword;
-//  RemainingBytes: integer;
-//begin
-//  if not Assigned(AData) or (ADataLength <= 0) then
-//  begin
-//    Result := 0;
-//    Exit;
-//  end;
-//  Result := ADataLength;
-//  RemainingBytes := ADataLength and 3;
-//  ADataLength := ADataLength shr 2; // div 4, so var name is not correct anymore..
-//  // main loop
-//  while ADataLength > 0 do
-//  begin
-//    inc(Result, PWord(AData)^);
-//    TempPart := (PWord(Pointer(Cardinal(AData)+2))^ shl 11) xor Result;
-//    Result := (Result shl 16) xor TempPart;
-//    AData := Pointer(Cardinal(AData) + 4);
-//    inc(Result, Result shr 11);
-//    dec(ADataLength);
-//  end;
-//  // end case
-//  if RemainingBytes = 3 then
-//  begin
-//    inc(Result, PWord(AData)^);
-//    Result := Result xor (Result shl 16);
-//    Result := Result xor (PByte(Pointer(Cardinal(AData)+2))^ shl 18);
-//    inc(Result, Result shr 11);
-//  end
-//  else if RemainingBytes = 2 then
-//  begin
-//    inc(Result, PWord(AData)^);
-//    Result := Result xor (Result shl 11);
-//    inc(Result, Result shr 17);
-//  end
-//  else if RemainingBytes = 1 then
-//  begin
-//    inc(Result, PByte(AData)^);
-//    Result := Result xor (Result shl 10);
-//    inc(Result, Result shr 1);
-//  end;
-//  // avalance
-//  Result := Result xor (Result shl 3);
-//  inc(Result, Result shr 5);
-//  Result := Result xor (Result shl 4);
-//  inc(Result, Result shr 17);
-//  Result := Result xor (Result shl 25);
-//  inc(Result, Result shr 6);
-//end;
-
-//// THJ Added new hash function
-//function TSynAsmMASMSyn.HashKey(Str: PWideChar): Cardinal;
-//var
-//  Off, Len, Skip, I: Integer;
-//begin
-//  Result := 0;
-//  Off := 1;
-//  Len := StrLen(Str);
-//  if Len < 16 then
-//    for I := (Len - 1) downto 0 do
-//    begin
-//      Result := (Result * 37) + Ord(Str[Off]);
-//      Inc(Off);
-//    end
-//  else
-//  begin
-//    { Only sample some characters }
-//    Skip := Len div 8;
-//    I := Len - 1;
-//    while I >= 0 do
-//    begin
-//      Result := (Result * 39) + Ord(Str[Off]);
-//      Dec(I, Skip);
-//      Inc(Off, Skip);
-//    end;
-//  end;
-//end;
 
 function TSynAsmMASMSyn.IdentKind(MayBe: PWideChar): TtkTokenKind;
 var
@@ -468,6 +416,20 @@ begin
     Entry := Entry.Next;
   end;
 
+  Entry := fOperatorKeywords[HashKey(MayBe)];
+  while Assigned(Entry) do
+  begin
+    if Entry.KeywordLen > fStringLen then
+      break
+    else if Entry.KeywordLen = fStringLen then
+      if IsCurrentToken(Entry.Keyword) then
+      begin
+        Result := TtkTokenKind(Entry.Kind);
+        exit;
+      end;
+    Entry := Entry.Next;
+  end;
+
   Result := tkIdentifier;
 end;
 
@@ -475,32 +437,37 @@ constructor TSynAsmMASMSyn.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
+  FSynColors := TSynColors.Create;
   fCaseSensitive := False;
 
   fKeywords := TSynHashEntryList.Create;
   fDirectivesKeywords := TSynHashEntryList.Create;
   fRegisterKeywords := TSynHashEntryList.Create;
   fApiKeywords := TSynHashEntryList.Create;
+  fOperatorKeywords := TSynHashEntryList.Create;
 
-  fCommentAttri       := TSynHighlighterAttributes.Create(SYNS_AttrComment, SYNS_FriendlyAttrComment);
+  fCommentAttri := TSynHighlighterAttributes.Create(SYNS_AttrComment, SYNS_FriendlyAttrComment);
   fCommentAttri.Style := [fsItalic];
   AddAttribute(fCommentAttri);
 
-  fIdentifierAttri    := TSynHighlighterAttributes.Create(SYNS_AttrIdentifier, SYNS_FriendlyAttrIdentifier);
+  fIdentifierAttri := TSynHighlighterAttributes.Create(SYNS_AttrIdentifier, SYNS_FriendlyAttrIdentifier);
   AddAttribute(fIdentifierAttri);
 
-  fKeyAttri           := TSynHighlighterAttributes.Create(SYNS_AttrReservedWord, SYNS_FriendlyAttrReservedWord);
-  fKeyAttri.Style     := [fsBold];
-
+  fKeyAttri := TSynHighlighterAttributes.Create(SYNS_AttrReservedWord, SYNS_FriendlyAttrReservedWord);
+  fKeyAttri.Style := [fsBold];
   AddAttribute(fKeyAttri);
-  fNumberAttri        := TSynHighlighterAttributes.Create(SYNS_AttrNumber, SYNS_FriendlyAttrNumber);
+
+  fNumberAttri := TSynHighlighterAttributes.Create(SYNS_AttrNumber, SYNS_FriendlyAttrNumber);
   fNumberAttri.Foreground := clRed;
   AddAttribute(fNumberAttri);
-  fSpaceAttri         := TSynHighlighterAttributes.Create(SYNS_AttrSpace, SYNS_FriendlyAttrSpace);
+
+  fSpaceAttri := TSynHighlighterAttributes.Create(SYNS_AttrSpace, SYNS_FriendlyAttrSpace);
   AddAttribute(fSpaceAttri);
-  fStringAttri        := TSynHighlighterAttributes.Create(SYNS_AttrString, SYNS_FriendlyAttrString);
+
+  fStringAttri := TSynHighlighterAttributes.Create(SYNS_AttrString, SYNS_FriendlyAttrString);
   AddAttribute(fStringAttri);
-  fSymbolAttri        := TSynHighlighterAttributes.Create(SYNS_AttrSymbol, SYNS_FriendlyAttrSymbol);
+
+  fSymbolAttri := TSynHighlighterAttributes.Create(SYNS_AttrSymbol, SYNS_FriendlyAttrSymbol);
   AddAttribute(fSymbolAttri);
 
   fDirectivesAttri   := TSynHighlighterAttributes.Create('Directives', 'Directives');
@@ -515,23 +482,28 @@ begin
 
   fApiAttri := TSynHighlighterAttributes.Create('Api', 'Api');
   fApiAttri.Foreground := clYellow;
-  //fApiAttri.Style := [fsBold];
+  fApiAttri.Style := [fsBold];
   AddAttribute(fApiAttri);
 
   fIncludeAttri := TSynHighlighterAttributes.Create('Include', 'Include');
   fIncludeAttri.Foreground := clMoneyGreen;
-  //fApiAttri.Style := [fsBold];
+  fIncludeAttri.Style := [fsBold];
   AddAttribute(fIncludeAttri);
+
+  fOperatorAttri := TSynHighlighterAttributes.Create('Operator', 'Operator');
+  fOperatorAttri.Foreground := clLime;
+  fOperatorAttri.Style := [fsBold];
+  AddAttribute(fOperatorAttri);
 
   EnumerateKeywords(Ord(tkKey), Mnemonics, IsIdentChar, DoAddKeyword);
   EnumerateKeywords(Ord(tkDirectives), Directives, IsIdentChar, DoAddDirectivesKeyword);
   EnumerateKeywords(Ord(tkRegister), Registers, IsIdentChar, DoAddRegisterKeyword);
 
-  // Temporary for now
-  if TFile.Exists('apis.txt') then
-    Apis := TFile.ReadAllText('apis.txt');
+  if FileExists('WinAPIInsertList.txt') then
+    FApis := TFile.ReadAllText('WinAPIInsertList.txt');
+  EnumerateKeywords(Ord(tkApi), FApis, IsIdentChar, DoAddApiKeyword);
 
-  EnumerateKeywords(Ord(tkApi), Apis, IsIdentChar, DoAddApiKeyword);
+  EnumerateKeywords(Ord(tkOperator), Operators, IsIdentChar, DoAddOperatorKeyword);
 
   SetAttributesOnChange(DefHighlightChange);
   fDefaultFilter      := SYNS_FilterX86Assembly;
@@ -543,6 +515,7 @@ begin
   fDirectivesKeywords.Free;
   fRegisterKeywords.Free;
   fApiKeywords.Free;
+  fOperatorKeywords.Free;
   inherited Destroy;
 end;
 
@@ -599,8 +572,7 @@ procedure TSynAsmMASMSyn.NumberProc;
   function IsNumberChar: Boolean;
   begin
     case fLine[Run] of
-      //'0'..'9', '.', 'a'..'f', 'h', 'A'..'F', 'H':
-      '0'..'9', 'a'..'f', 'h', 'A'..'F', 'H': Result := True;   // THJ
+      '0'..'9', 'a'..'f', 'h', 'A'..'F', 'H': Result := True;
       else
         Result := False;
     end;
@@ -741,6 +713,7 @@ begin
     tkRegister: Result := fRegisterAttri;
     tkApi: Result := fApiAttri;
     tkInclude: Result := fIncludeAttri;
+    tkOperator: Result := fOperatorAttri;
     else Result := nil;
   end;
 end;
@@ -786,9 +759,138 @@ begin
             'END';
 end;
 
+procedure TSynAsmMASMSyn.SaveFile(fName: string);
+begin
+  FSynColors.SaveFile(fName);
+end;
+
+procedure TSynAsmMASMSyn.LoadFile(fName: string);
+begin
+  FSynColors.LoadFile(fName);
+end;
+
 class function TSynAsmMASMSyn.GetFriendlyLanguageName: UnicodeString;
 begin
   Result := SYNS_FriendlyLangMASM;
+end;
+
+procedure TSynAsmMASMSyn.AssignColors(memo: TSynMemo);
+var
+  e: TSynColorsElement;
+begin
+  memo.Color := FSynColors.Editor.Colors.Background;
+  memo.ActiveLineColor := FSynColors.Editor.Colors.ActiveLineBackground;
+  //memo.Gutter.Color := FSynColors.Editor.Colors.Gutter;
+  //memo.Gutter.Font.Color := FSynColors.Editor.Colors.GutterLineNumber;
+  //memo.Gutter.UseFontStyle := true;
+  memo.Gutter.Color := $313131;
+  memo.Gutter.Font.Color := clSilver;
+  memo.Gutter.UseFontStyle := true;
+  memo.Gutter.BorderColor := FSynColors.Editor.Colors.GutterBorder;
+  memo.Gutter.GradientStartColor := FSynColors.Editor.Colors.GutterGradientStart;
+  memo.Gutter.GradientEndColor := FSynColors.Editor.Colors.GutterGradientEnd;
+  memo.RightEdgeColor := FSynColors.Editor.Colors.RightEdge;
+  memo.ScrollHintColor := FSynColors.Editor.Colors.ScrollHint;
+  memo.SelectedColor.Background := FSynColors.Editor.Colors.SelectiondBackground;
+  memo.SelectedColor.Foreground := FSynColors.Editor.Colors.SelectionForeground;
+
+  memo.Font.Size := FSynColors.Editor.FontSizes.Text;
+  memo.Font.Name := FSynColors.Editor.Fonts.Text;
+  memo.Gutter.Font.Size := FSynColors.Editor.FontSizes.Gutter;
+  memo.Gutter.Font.Name := FSynColors.Editor.Fonts.Gutter;
+
+  e := GetElement('Comment');
+  if e <> nil then begin
+    fCommentAttri.Foreground := e.Foreground;
+    fCommentAttri.Background := e.Background;
+    fCommentAttri.Style := e.Style;
+  end;
+
+  e := GetElement('Identifier');
+  if e <> nil then begin
+    fIdentifierAttri.Foreground := e.Foreground;
+    fIdentifierAttri.Background := e.Background;
+    fIdentifierAttri.Style := e.Style;
+  end;
+
+  e := GetElement('Keywords');
+  if e <> nil then begin
+    fKeyAttri.Foreground := e.Foreground;
+    fKeyAttri.Background := e.Background;
+    fKeyAttri.Style := e.Style;
+  end;
+
+  e := GetElement('Directive');
+  if e <> nil then begin
+    fDirectivesAttri.Foreground := e.Foreground;
+    fDirectivesAttri.Background := e.Background;
+    fDirectivesAttri.Style := e.Style;
+  end;
+
+  e := GetElement('Register');
+  if e <> nil then begin
+    fRegisterAttri.Foreground := e.Foreground;
+    fRegisterAttri.Background := e.Background;
+    fRegisterAttri.Style := e.Style;
+  end;
+
+  e := GetElement('Api');
+  if e <> nil then begin
+    fApiAttri.Foreground := e.Foreground;
+    fApiAttri.Background := e.Background;
+    fApiAttri.Style := e.Style;
+  end;
+
+  e := GetElement('Include');
+  if e <> nil then begin
+    fIncludeAttri.Foreground := e.Foreground;
+    fIncludeAttri.Background := e.Background;
+    fIncludeAttri.Style := e.Style;
+  end;
+
+  e := GetElement('String');
+  if e <> nil then begin
+    fStringAttri.Foreground := e.Foreground;
+    fStringAttri.Background := e.Background;
+    fStringAttri.Style := e.Style;
+  end;
+
+  e := GetElement('Symbol');
+  if e <> nil then begin
+    fSymbolAttri.Foreground := e.Foreground;
+    fSymbolAttri.Background := e.Background;
+    fSymbolAttri.Style := e.Style;
+  end;
+
+  e := GetElement('Number');
+  if e <> nil then begin
+    fNumberAttri.Foreground := e.Foreground;
+    fNumberAttri.Background := e.Background;
+    fNumberAttri.Style := e.Style;
+  end;
+
+  e := GetElement('Operator');
+  if e <> nil then begin
+    fOperatorAttri.Foreground := e.Foreground;
+    fOperatorAttri.Background := e.Background;
+    fOperatorAttri.Style := e.Style;
+  end;
+
+//  fSpaceAttri: TSynHighlighterAttributes;
+end;
+
+function TSynAsmMASMSyn.GetElement(find: string): TSynColorsElement;
+var
+  I: Integer;
+begin
+  for I := 0 to FSynColors.Elements.Count-1 do
+  begin
+    if FSynColors.Elements.Items[I].Name = find then
+    begin
+      result := FSynColors.Elements.Items[I];
+      exit;
+    end;
+  end;
 end;
 
 initialization

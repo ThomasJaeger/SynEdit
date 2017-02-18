@@ -599,12 +599,13 @@ uses
 {$IFDEF SYN_CLX}
   QSynEditTextBuffer,
   QSynEditMiscProcs,
-  QSynEditKeyConst;
+  QSynEditKeyConst
 {$ELSE}
   SynEditTextBuffer,
   SynEditMiscProcs,
-  SynEditKeyConst;
+  SynEditKeyConst
 {$ENDIF}
+  , sSkinProvider, sMessages;
 
 const
   TextHeightString = 'CompletionProposal';
@@ -1231,6 +1232,8 @@ end;
 { TSynBaseCompletionProposalForm }
 
 constructor TSynBaseCompletionProposalForm.Create(AOwner: TComponent);
+var
+  skinProvider: TsSkinProvider;
 begin
   FResizeable := True;
 {$IFDEF SYN_CPPB_1}
@@ -1301,6 +1304,14 @@ begin
   OnDblClick := DoDoubleClick;
   OnShow := DoFormShow;
   OnHide := DoFormHide;
+
+  skinProvider := TsSkinProvider(SendMessage(Handle, SM_ALPHACMD, MakeWParam(0, AC_GETPROVIDER), 0));
+  if Assigned(skinProvider) then
+  begin
+    skinProvider.AllowExtBorders := False;
+    skinProvider.DrawNonClientArea := False;
+    skinProvider.DrawClientArea := False;
+  end;
 end;
 
 {$IFDEF SYN_CLX}
