@@ -176,7 +176,7 @@ begin
   FEditor.Colors.Gutter := $313131;
   FEditor.Colors.GutterLineNumber := clSilver;
   FEditor.Colors.GutterBorder := clSilver;
-  FEditor.Colors.GutterGradientStart := clBlack;
+  FEditor.Colors.GutterGradientStart := $313131;
   FEditor.Colors.GutterGradientEnd := clBlack;
   FEditor.Colors.RightEdge := $313131;
   FEditor.Colors.ScrollHint := clBlack;
