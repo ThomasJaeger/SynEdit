@@ -33,6 +33,8 @@ type
       FScrollHint: TColor;
       FSelectiondBackground: TColor;
       FSelectionForeground: TColor;
+      FSearchSelectiondBackground: TColor;
+      FSearchSelectionForeground: TColor;
       FCompletionProposalBackground: TColor;
       FCompletionProposalBackgroundBorder: TColor;
       FCompletionProposalSelection: TColor;
@@ -51,6 +53,8 @@ type
       property ScrollHint: TColor read FScrollHint write FScrollHint;
       property SelectiondBackground: TColor read FSelectiondBackground write FSelectiondBackground;
       property SelectionForeground: TColor read FSelectionForeground write FSelectionForeground;
+      property SearchSelectiondBackground: TColor read FSearchSelectiondBackground write FSearchSelectiondBackground;
+      property SearchSelectionForeground: TColor read FSearchSelectionForeground write FSearchSelectionForeground;
       property CompletionProposalBackground: TColor read FCompletionProposalBackground write FCompletionProposalBackground;
       property CompletionProposalBackgroundBorder: TColor read FCompletionProposalBackgroundBorder write FCompletionProposalBackgroundBorder;
       property CompletionProposalSelection: TColor read FCompletionProposalSelection write FCompletionProposalSelection;
@@ -182,6 +186,8 @@ begin
   FEditor.Colors.ScrollHint := clBlack;
   FEditor.Colors.SelectionForeground := clWhite;
   FEditor.Colors.SelectiondBackground := clBlue;
+  FEditor.Colors.SearchSelectionForeground := clYellow;
+  FEditor.Colors.SearchSelectiondBackground := clBlack;
 
   FEditor.Fonts := TSynColorsEditorFonts.Create;
   FEditor.Fonts.Text := 'Courier New';
@@ -295,6 +301,8 @@ begin
   jColors.S['ScrollHint'] := ColorToString(FEditor.Colors.ScrollHint);
   jColors.S['SelectiondBackground'] := ColorToString(FEditor.Colors.SelectiondBackground);
   jColors.S['SelectionForeground'] := ColorToString(FEditor.Colors.SelectionForeground);
+  jColors.S['SearchSelectiondBackground'] := ColorToString(FEditor.Colors.SearchSelectiondBackground);
+  jColors.S['SearchSelectionForeground'] := ColorToString(FEditor.Colors.SearchSelectionForeground);
   jColors.S['CompletionProposalBackground'] := ColorToString(FEditor.Colors.CompletionProposalBackground);
   jColors.S['CompletionProposalBackgroundBorder'] := ColorToString(FEditor.Colors.CompletionProposalBackgroundBorder);
   jColors.S['CompletionProposalSelection'] := ColorToString(FEditor.Colors.CompletionProposalSelection);
@@ -348,6 +356,8 @@ begin
   FEditor.Colors.ScrollHint := StringToColorDef(json['Editor']['Colors'].S['ScrollHint'], clBlack);
   FEditor.Colors.SelectiondBackground := StringToColorDef(json['Editor']['Colors'].S['SelectiondBackground'], clBlue);
   FEditor.Colors.SelectionForeground := StringToColorDef(json['Editor']['Colors'].S['SelectionForeground'], clWhite);
+  FEditor.Colors.SearchSelectiondBackground := StringToColorDef(json['Editor']['Colors'].S['SearchSelectiondBackground'], clYellow);
+  FEditor.Colors.SearchSelectionForeground := StringToColorDef(json['Editor']['Colors'].S['SearchSelectionForeground'], clBlack);
   FEditor.Colors.CompletionProposalBackground := StringToColorDef(json['Editor']['Colors'].S['CompletionProposalBackground'], clWhite);
   FEditor.Colors.CompletionProposalBackgroundBorder := StringToColorDef(json['Editor']['Colors'].S['CompletionProposalBackgroundBorder'], clBlack);
   FEditor.Colors.CompletionProposalSelection := StringToColorDef(json['Editor']['Colors'].S['CompletionProposalSelection'], clBlue);
