@@ -101,14 +101,16 @@ type
   TSynColors = class(TPersistent)
     private
       FVersion: integer;
+      FName: string;
       FEditor: TSynColorsEditor;
       FElements: TList<TSynColorsElement>;
     public
       constructor Create; overload;
-      procedure SaveFile(fName: string);
-      procedure LoadFile(fName: string);
+      procedure SaveFile(fileName: string);
+      procedure LoadFile(fileName: string);
     published
       property Version: integer read FVersion;
+      property Name: string read FName write FName;
       property Editor: TSynColorsEditor read FEditor write FEditor;
       property Elements: TList<TSynColorsElement> read FElements write FElements;
   end;
@@ -173,6 +175,7 @@ begin
   inherited Create;
 
   FVersion := 1;
+  FName := 'Default';
   FEditor := TSynColorsEditor.Create;
   FEditor.Colors := TSynColorsEditorColors.Create;
   FEditor.Colors.Background := clBlack;
@@ -279,7 +282,7 @@ begin
   FElements.Add(element);
 end;
 
-procedure TSynColors.SaveFile(fName: string);
+procedure TSynColors.SaveFile(fileName: string);
 var
   json, jEditor, jElements, jColors, jFonts, jFontSizes: TJSONObject;
   fileContent: TStringList;
@@ -287,6 +290,7 @@ var
 begin
   json := TJSONObject.Create();
   json.I['Version'] := FVersion;
+  json.S['Name'] := FName;
 
   jEditor := json.O['Editor'];
   jColors := jEditor.O['Colors'];
@@ -330,18 +334,20 @@ begin
 
   fileContent := TStringList.Create;
   fileContent.Text := json.ToJSON(false);
-  fileContent.SaveToFile(fName);
+  fileContent.SaveToFile(fileName);
 end;
 
-procedure TSynColors.LoadFile(fName: string);
+procedure TSynColors.LoadFile(fileName: string);
 var
   json: TJSONObject;
   element: TSynColorsElement;
   I: Integer;
 begin
-  if not FileExists(fName) then exit;
+  if not FileExists(fileName) then exit;
 
-  json := TJSONObject.ParseFromFile(fName) as TJsonObject;
+  json := TJSONObject.ParseFromFile(fileName) as TJsonObject;
+
+  FName := json.S['Name'];
 
   FEditor := TSynColorsEditor.Create;
   FEditor.Colors := TSynColorsEditorColors.Create;

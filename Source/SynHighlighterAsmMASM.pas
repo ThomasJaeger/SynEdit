@@ -78,7 +78,7 @@ uses
 type
   TtkTokenKind = (tkComment, tkIdentifier, tkKey, tkNull, tkNumber, tkSpace,
     tkString, tkSymbol, tkUnknown, tkDirectives, tkRegister, tkApi, tkInclude,
-    tkOperator);
+    tkOperator, tkSelection);
 
 type
   TSynAsmMASMSyn = class(TSynCustomHighlighter)
@@ -371,7 +371,6 @@ begin
     Entry := Entry.Next;
   end;
 
-  // THJ
   Entry := fDirectivesKeywords[HashKey(MayBe)];
   while Assigned(Entry) do
   begin
@@ -386,7 +385,6 @@ begin
     Entry := Entry.Next;
   end;
 
-  // THJ
   Entry := fRegisterKeywords[HashKey(MayBe)];
   while Assigned(Entry) do
   begin
@@ -401,7 +399,6 @@ begin
     Entry := Entry.Next;
   end;
 
-  // THJ
   Entry := fApiKeywords[HashKey(MayBe)];
   while Assigned(Entry) do
   begin
