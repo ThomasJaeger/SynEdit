@@ -230,7 +230,7 @@ const
     '.alpha,assume,.break,byte,catstr,.code,comm,comment,.const,.continue,.cref,'+
     '.data,.data?,db,dd,df,.dosseg,dosseg,dq,dt,dw,dword,echo,.else,else,elseif,'+
   	'.elseif,'+
-    'elseif2,end,.endif,endm,endp,.endprolog,ends,.endw,equ,.err,.err2,.errb,'+
+    'elseif2,end,.endif,endif,endm,endp,.endprolog,ends,.endw,equ,.err,.err2,.errb,'+
     '.errdef,.errdif[[i]],.erre,.erridn[[i]],.errnb,.errndef,.errnz,even,.exit,'+
     'exitm,extern,externdef,extrn,.fardata,.fardata?,for,forc,.fpo,fword,goto,'+
     'group,.if,if,if2,ifb,ifdef,ifdif[[i]],ife,ifidn[[i]],ifnb,ifndef,include,'+
