@@ -161,15 +161,6 @@ type
     property OperatorAttri: TSynHighlighterAttributes read fOperatorAttri write fOperatorAttri;
   end;
 
-implementation
-
-uses
-{$IFDEF SYN_CLX}
-  QSynEditStrConst;
-{$ELSE}
-  SynEditStrConst;
-{$ENDIF}
-
 const
   Mnemonics: UnicodeString =
     'aaa,aad,aam,adc,add,and,arpl,bound,bsf,bsr,bswap,bt,btc,' +
@@ -297,6 +288,15 @@ const
 //  StringControl: UnicodeString = 'catstr,instr,sizestr,substr';
 //
 //  Miscellaneous: UnicodeString = '=,comment,display,echo,equ,%out';
+
+implementation
+
+uses
+{$IFDEF SYN_CLX}
+  QSynEditStrConst;
+{$ELSE}
+  SynEditStrConst;
+{$ENDIF}
 
 procedure TSynAsmMASMSyn.DoAddKeyword(AKeyword: UnicodeString; AKind: integer);
 var
